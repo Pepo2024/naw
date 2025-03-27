@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- تضمين مكتبات Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <style>
+    :root {
+      --primary-color: #2A0944;
+      --secondary-color: #3B185F;
+      --accent-color: #A12568;
+      --text-color: #FEC260;
+      --background-gradient: linear-gradient(135deg, #2A0944, #3B185F, #A12568);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Cairo', sans-serif;
+    }
+    body {
+      background: var(--background-gradient);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-container {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    .login-container h2 {
+      margin-bottom: 20px;
+      color: var(--text-color);
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.3s ease;
+      width: 100%;
+    }
+    .btn-google {
+      background: #db4437;
+      color: #fff;
+    }
+    .btn-google:hover {
+      opacity: 0.9;
+    }
+    .btn-phone {
+      background: var(--accent-color);
+      color: #fff;
+    }
+    .btn-phone:hover {
+      opacity: 0.9;
+    }
+    .input-group {
+      margin: 15px 0;
+      text-align: right;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 1rem;
+      transition: 0.3s ease;
+    }
+    .input-group input:focus {
+      border-color: var(--accent-color);
+      background: rgba(161,37,104,0.1);
+    }
+    .toggle-auth {
+      margin-top: 20px;
+      cursor: pointer;
+      color: var(--text-color);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>تسجيل الدخول</h2>
+    <!-- قسم تسجيل الدخول عبر جوجل -->
+    <div id="google-auth" class="auth-section">
+      <button class="btn btn-google" id="googleSignIn">تسجيل الدخول عبر جوجل</button>
+      <p class="toggle-auth" id="switchToPhone">أو التسجيل باستخدام الاسم ورقم الهاتف</p>
+    </div>
+    <!-- قسم تسجيل الدخول باستخدام الاسم ورقم الهاتف -->
+    <div id="phone-auth" class="auth-section" style="display: none;">
+      <div class="input-group">
+        <label for="userName">الاسم</label>
+        <input type="text" id="userName" placeholder="أدخل اسمك">
+      </div>
+      <div class="input-group">
+        <label for="userPhone">رقم الهاتف</label>
+        <input type="text" id="userPhone" placeholder="أدخل رقم هاتفك">
+      </div>
+      <!-- عنصر reCAPTCHA (غير مرئي) مطلوب لتوثيق رقم الهاتف -->
+      <div id="recaptcha-container"></div>
+      <button class="btn btn-phone" id="phoneSignIn">تسجيل الدخول برقم الهاتف</button>
+      <p class="toggle-auth" id="switchToGoogle">أو التسجيل باستخدام جوجل</p>
+    </div>
+  </div>
+
+  <script>
+    // إعدادات Firebase
+    // يمكنك استخدام Key Pair التالي إذا احتجت له:
+    // BNwlePlAo4lDY5A-5TBmy9cWla3pMGpkE95w4A7vj15aMr0jfApZuupIgb3OiP6w7_BGgiJQPZ8QBOMdPgLMoHM
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZgXLUfHvq4X0WVYUlZXp42famzpj1WEc",
+      authDomain: "george-a14fb.firebaseapp.com",
+      databaseURL: "https://george-a14fb-default-rtdb.firebaseio.com",
+      projectId: "george-a14fb",
+      storageBucket: "george-a14fb.firebasestorage.app",
+      messagingSenderId: "119902454244",
+      appId: "1:119902454244:web:581c2c6d845e331c2007f1"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // تبديل بين طرق تسجيل الدخول
+    document.getElementById('switchToPhone').addEventListener('click', function() {
+      document.getElementById('google-auth').style.display = 'none';
+      document.getElementById('phone-auth').style.display = 'block';
+    });
+    document.getElementById('switchToGoogle').addEventListener('click', function() {
+      document.getElementById('phone-auth').style.display = 'none';
+      document.getElementById('google-auth').style.display = 'block';
+    });
+
+    // عند نجاح تسجيل الدخول يتم إعادة التوجيه إلى صفحة الفورم (form.html)
+    function redirectToForm() {
+      window.location.href = "form.html";
+    }
+
+    // تسجيل الدخول عبر جوجل
+    document.getElementById('googleSignIn').addEventListener('click', function() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+      .then((result) => {
+        console.log("تم تسجيل الدخول:", result.user);
+        // بعد نجاح تسجيل الدخول، يتم إعادة التوجيه إلى صفحة الفورم
+        redirectToForm();
+      })
+      .catch((error) => {
+        console.error("خطأ في تسجيل الدخول عبر جوجل:", error);
+        alert("حدث خطأ أثناء تسجيل الدخول عبر جوجل: " + error.message);
+      });
+    });
+
+    // إعداد reCAPTCHA لتسجيل الدخول عبر الهاتف (غير مرئي)
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      'size': 'invisible',
+      'callback': function(response) {
+        console.log("تم التحقق من reCAPTCHA");
+      }
+    });
+    
+    // تسجيل الدخول باستخدام رقم الهاتف
+    document.getElementById('phoneSignIn').addEventListener('click', function() {
+      var phoneNumber = document.getElementById('userPhone').value.trim();
+      var userName = document.getElementById('userName').value.trim();
+      if (!userName || !phoneNumber) {
+        alert("يرجى إدخال الاسم ورقم الهاتف");
+        return;
+      }
+      // يجب التأكد من إدخال رقم الهاتف بصيغة دولية صحيحة، مثال: +20XXXXXXXXXX
+      firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+      .then(function(confirmationResult) {
+        var verificationCode = prompt('أدخل رمز التحقق الذي تم إرساله إلى هاتفك:');
+        return confirmationResult.confirm(verificationCode);
+      })
+      .then(function(result) {
+        console.log("تم تسجيل الدخول:", result.user);
+        // يمكنك حفظ اسم المستخدم في قاعدة بيانات المستخدمين إذا رغبت
+        redirectToForm();
+      })
+      .catch(function(error) {
+        console.error("خطأ في تسجيل الدخول عبر الهاتف:", error);
+        alert("حدث خطأ أثناء تسجيل الدخول عبر الهاتف: " + error.message);
+      });
+    });
+  </script>
+</body>
+</html>
