@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول</title>
-  <!-- تضمين خط Cairo وأيقونات FontAwesome -->
+  <!-- خط Cairo -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- أيقونات FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <!-- تضمين Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  
   <style>
     :root {
       --primary-color: #2A0944;
@@ -29,13 +32,13 @@
       color: #fff;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       padding: 20px;
     }
     .login-container {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 20px;
       padding: 30px;
       width: 100%;
@@ -53,14 +56,14 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: 12px;
+      padding: 12px 20px;
       margin: 10px 0;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       font-size: 1rem;
+      transition: 0.3s ease;
       width: 100%;
-      transition: 0.3s;
     }
     .btn i {
       font-size: 1.2rem;
@@ -70,13 +73,6 @@
       color: #fff;
     }
     .btn-google:hover {
-      opacity: 0.9;
-    }
-    .btn-facebook {
-      background: #3b5998;
-      color: #fff;
-    }
-    .btn-facebook:hover {
       opacity: 0.9;
     }
     .btn-phone {
@@ -120,20 +116,16 @@
 <body>
   <div class="login-container">
     <h2>تسجيل الدخول</h2>
-    <!-- قسم تسجيل الدخول عبر جوجل وفيسبوك -->
-    <div id="social-auth">
+    <!-- قسم تسجيل الدخول عبر جوجل -->
+    <div id="google-auth" class="auth-section">
       <button class="btn btn-google" id="googleSignIn">
         <i class="fab fa-google"></i>
         <span>تسجيل الدخول عبر جوجل</span>
       </button>
-      <button class="btn btn-facebook" id="facebookSignIn">
-        <i class="fab fa-facebook-f"></i>
-        <span>تسجيل الدخول عبر فيسبوك</span>
-      </button>
-      <p class="toggle-auth" id="switchToPhone">أو التسجيل باستخدام الهاتف</p>
+      <p class="toggle-auth" id="switchToPhone">أو التسجيل باستخدام الاسم ورقم الهاتف</p>
     </div>
-    <!-- قسم تسجيل الدخول باستخدام الهاتف -->
-    <div id="phone-auth" style="display: none;">
+    <!-- قسم تسجيل الدخول باستخدام الاسم ورقم الهاتف -->
+    <div id="phone-auth" class="auth-section" style="display: none;">
       <div class="input-group">
         <label for="userName">الاسم</label>
         <input type="text" id="userName" placeholder="أدخل اسمك">
@@ -148,11 +140,12 @@
         <i class="fas fa-phone"></i>
         <span>تسجيل الدخول برقم الهاتف</span>
       </button>
-      <p class="toggle-auth" id="switchToSocial">أو التسجيل باستخدام جوجل/فيسبوك</p>
+      <p class="toggle-auth" id="switchToGoogle">أو التسجيل باستخدام جوجل</p>
     </div>
   </div>
+
   <script>
-    // تكوين Firebase (تأكد من صحة البيانات في Firebase Console)
+    // تكوين Firebase مع استخدام Key Pair المُزود (تأكد من صحة البيانات في Firebase Console)
     const firebaseConfig = {
       apiKey: "BNwlePlAo4lDY5A-5TBmy9cWla3pMGpkE95w4A7vj15aMr0jfApZuupIgb3OiP6w7_BGgiJQPZ8QBOMdPgLMoHM",
       authDomain: "george-a14fb.firebaseapp.com",
@@ -165,72 +158,60 @@
     firebase.initializeApp(firebaseConfig);
 
     // تبديل العرض بين طرق تسجيل الدخول
-    document.getElementById('switchToPhone').addEventListener('click', function(){
-      document.getElementById('social-auth').style.display = 'none';
+    document.getElementById('switchToPhone').addEventListener('click', function() {
+      document.getElementById('google-auth').style.display = 'none';
       document.getElementById('phone-auth').style.display = 'block';
     });
-    document.getElementById('switchToSocial').addEventListener('click', function(){
+    document.getElementById('switchToGoogle').addEventListener('click', function() {
       document.getElementById('phone-auth').style.display = 'none';
-      document.getElementById('social-auth').style.display = 'block';
+      document.getElementById('google-auth').style.display = 'block';
     });
 
     // تسجيل الدخول عبر جوجل
-    document.getElementById('googleSignIn').addEventListener('click', function(){
+    document.getElementById('googleSignIn').addEventListener('click', function() {
       var provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithPopup(provider)
-      .then(function(result){
-        console.log("تم تسجيل الدخول عبر جوجل:", result.user);
+      .then((result) => {
+        console.log("تم تسجيل الدخول:", result.user);
         // إعادة التوجيه لصفحة الفورم بعد نجاح تسجيل الدخول
         window.location.href = "form.html";
       })
-      .catch(function(error){
-        console.error("خطأ في تسجيل الدخول عبر جوجل:", error);
-        alert("حدث خطأ أثناء تسجيل الدخول عبر جوجل: " + error.message);
+      .catch((error) => {
+        console.error("خطأ في تسجيل الدخول:", error);
+        alert("حدث خطأ أثناء تسجيل الدخول: " + error.message);
       });
     });
 
-    // تسجيل الدخول عبر فيسبوك
-    document.getElementById('facebookSignIn').addEventListener('click', function(){
-      var provider = new firebase.auth.FacebookAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-      .then(function(result){
-        console.log("تم تسجيل الدخول عبر فيسبوك:", result.user);
-        window.location.href = "form.html";
-      })
-      .catch(function(error){
-        console.error("خطأ في تسجيل الدخول عبر فيسبوك:", error);
-        alert("حدث خطأ أثناء تسجيل الدخول عبر فيسبوك: " + error.message);
-      });
-    });
-
-    // إعداد reCAPTCHA لتسجيل الدخول عبر الهاتف (invisible)
+    // إعداد reCAPTCHA لتسجيل الدخول عبر الهاتف (مستخدم كـ invisible)
     window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
       'size': 'invisible',
-      'callback': function(response){
+      'callback': function(response) {
         console.log("تم التحقق من reCAPTCHA");
       }
     });
 
     // تسجيل الدخول باستخدام رقم الهاتف
-    document.getElementById('phoneSignIn').addEventListener('click', function(){
-      var userName = document.getElementById('userName').value.trim();
-      var userPhone = document.getElementById('userPhone').value.trim();
-      if (!userName || !userPhone) {
+    document.getElementById('phoneSignIn').addEventListener('click', function() {
+      var phoneNumber = document.getElementById('userPhone').value;
+      var userName = document.getElementById('userName').value;
+      if (!userName || !phoneNumber) {
         alert("يرجى إدخال الاسم ورقم الهاتف");
         return;
       }
-      firebase.auth().signInWithPhoneNumber(userPhone, window.recaptchaVerifier)
-      .then(function(confirmationResult){
-        var verificationCode = prompt("أدخل رمز التحقق الذي تم إرساله إلى هاتفك:");
+      // تأكد من إدخال رقم الهاتف بالصورة الدولية (مثلاً +20XXXXXXXXXX)
+      firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+      .then(function(confirmationResult) {
+        var verificationCode = prompt('أدخل رمز التحقق الذي تم إرساله إلى هاتفك:');
         return confirmationResult.confirm(verificationCode);
       })
-      .then(function(result){
-        console.log("تم تسجيل الدخول عبر الهاتف:", result.user);
+      .then(function(result) {
+        console.log("تم تسجيل الدخول:", result.user);
+        // إعادة التوجيه لصفحة الفورم بعد نجاح تسجيل الدخول
         window.location.href = "form.html";
       })
-      .catch(function(error){
-        console.error("خطأ في تسجيل الدخول عبر الهاتف:", error);
-        alert("حدث خطأ أثناء تسجيل الدخول عبر الهاتف: " + error.message);
+      .catch(function(error) {
+        console.error("خطأ في تسجيل الدخول:", error);
+        alert("حدث خطأ أثناء تسجيل الدخول: " + error.message);
       });
     });
   </script>
