@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام طلبات الكشوف الاحترافي</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <style>
+    :root {
+      --primary-color: #2A0944;
+      --secondary-color: #3B185F;
+      --accent-color: #A12568;
+      --text-color: #FEC260;
+      --background-gradient: linear-gradient(135deg, #2A0944, #3B185F, #A12568);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Cairo', sans-serif;
+    }
+    
+    body {
+      background: var(--background-gradient);
+      color: #fff;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* قسم النجوم في الخلفية */
+    .stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      opacity: 0.8;
+      border-radius: 50%;
+      animation: twinkle 2s infinite ease-in-out;
+    }
+    /* توزيع النجوم عشوائي مع أحجام مختلفة */
+    .star:nth-child(1) { width: 3px; height: 3px; top: 10%; left: 20%; animation-delay: 0s; }
+    .star:nth-child(2) { width: 6px; height: 6px; top: 30%; left: 70%; animation-delay: 0.5s; }
+    .star:nth-child(3) { width: 4px; height: 4px; top: 50%; left: 40%; animation-delay: 1s; }
+    .star:nth-child(4) { width: 8px; height: 8px; top: 80%; left: 15%; animation-delay: 1.5s; }
+    .star:nth-child(5) { width: 2px; height: 2px; top: 20%; left: 85%; animation-delay: 0.3s; }
+    .star:nth-child(6) { width: 5px; height: 5px; top: 60%; left: 10%; animation-delay: 0.7s; }
+    .star:nth-child(7) { width: 7px; height: 7px; top: 40%; left: 80%; animation-delay: 1.2s; }
+    .star:nth-child(8) { width: 3px; height: 3px; top: 70%; left: 50%; animation-delay: 0.2s; }
+    .star:nth-child(9) { width: 6px; height: 6px; top: 15%; left: 40%; animation-delay: 1.7s; }
+    .star:nth-child(10){ width: 4px; height: 4px; top: 90%; left: 60%; animation-delay: 0.9s; }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    
+     /* تصميم صفحة التحميل الحديثة */
+     #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+    
+    .loader-container {
+      text-align: center;
+    }
+    
+    .loader {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      margin: 0 auto;
+    }
+    
+    .loader-spinner {
+      width: 100%;
+      height: 100%;
+      border: 4px solid transparent;
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+      position: relative;
+    }
+    
+    .loader-spinner::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      bottom: 5px;
+      left: 5px;
+      border: 4px solid transparent;
+      border-top-color: var(--text-color);
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: var(--text-color);
+      letter-spacing: 2px;
+      animation: textPulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes textPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .logo-loader {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+    }
+    .logo-shape {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 4px solid var(--accent-color);
+      border-radius: 20px;
+      animation: logoPulse 2s infinite;
+    }
+    .logo-shape:nth-child(2) {
+      animation-delay: 0.5s;
+      opacity: 0.7;
+    }
+    .logo-shape:nth-child(3) {
+      animation-delay: 1s;
+      opacity: 0.4;
+    }
+    @keyframes logoPulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    
+    /* تنسيق الهيدر */
+    .main-header {
+      padding: 10px;
+      position:fixed;
+      top: 0;
+      width: 100%;
+      height: 20%;
+      background: rgba(42, 9, 68, 0.95);
+      backdrop-filter: blur(50px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(110, 24, 136, 0.834);
+    }
+    .main-header:hover {
+      box-shadow: 0 0 20px rgb(160, 176, 228);
+      transition: box-shadow 0.3s ease-in-out;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      font-size: 3.5rem;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .logo h1 {
+      font-size: 1.8rem;
+      color: var(--text-color);
+    }
+    .logo span {
+      font-size: 0.9rem;
+      color: #fff;
+      opacity: 0.8;
+    }
+    
+    /* تنسيق الحاوية الرئيسية للنموذج */
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 150px auto 50px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateY(50px);
+      opacity: 0;
+      animation: containerEntry 1s ease forwards;
+    }
+    @keyframes containerEntry {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .form-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .form-header h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: var(--text-color);
+    }
+    .progress-tube {
+      width: 90%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin: 20px auto;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-color), #ff00d0);
+      border-radius: 10px;
+      transition: width 0.5s ease-in-out;
+      position: relative;
+    }
+    
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: tubeGlow 2s infinite;
+    }
+    
+    @keyframes tubeGlow {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+    
+    /* تنسيق النموذج */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+    .form-group {
+      position: relative;
+      margin-bottom: 25px;
+    }
+    .form-group.floating label {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      transition: 0.3s ease;
+    }
+    .form-group.floating input,
+    .form-group.floating select {
+      width: 100%;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      transition: 0.3s ease;
+    }
+    .form-group.floating input:focus,
+    .form-group.floating select:focus,
+    .form-group.floating input:valid,
+    .form-group.floating select:valid {
+      border-color: var(--accent-color);
+      background: rgba(161, 37, 104, 0.1);
+    }
+    .form-group.floating input:focus ~ label,
+    .form-group.floating select:focus ~ label,
+    .form-group.floating input:valid ~ label,
+    .form-group.floating select:valid ~ label {
+      transform: translateY(-180%);
+      font-size: 0.9em;
+      color: var(--text-color);
+    }
+    .input-border {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-color);
+      transition: 0.3s ease;
+    }
+    .form-group.floating input:focus ~ .input-border,
+    .form-group.floating select:focus ~ .input-border {
+      width: 100%;
+    }
+    
+    /* تنسيق زر الإرسال مع تأثير التوهج */
+    .submit-btn {
+      position: relative;
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      overflow: hidden;
+      transition: 0.3s ease;
+      margin-top: 20px;
+    }
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(161, 37, 104, 0.4);
+    }
+    .submit-btn .btn-loader {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: btnLoading 1.5s infinite;
+      display: none;
+    }
+    @keyframes btnLoading {
+      to { left: 100%; }
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px var(--accent-color); }
+      50% { box-shadow: 0 0 20px var(--accent-color); }
+      100% { box-shadow: 0 0 5px var(--accent-color); }
+    }
+    .submit-btn {
+      animation: fadeInElement 0.5s forwards, glow 2s infinite;
+    }
+    
+    /* أنيميشن ظهور العناصر */
+    @keyframes fadeInElement {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* تنسيق الإشعارات */
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease-out, shake 0.5s ease-in-out;
+    }
+    .notification.success {
+      background: #2ecc71;
+    }
+    .notification.error {
+      background: #e74c3c;
+    }
+    
+    /* أنيميشن عرض الإشعارات */
+    @keyframes slideIn {
+      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes shake {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      25% { transform: translateX(-50%) rotate(5deg); }
+      50% { transform: translateX(-50%) rotate(-5deg); }
+      75% { transform: translateX(-50%) rotate(5deg); }
+      100% { transform: translateX(-50%) rotate(0deg); }
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="stars">
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+  </div>
+
+  <div id="loader">
+    <div class="loader-container">
+      <div class="loader">
+        <div class="loader-spinner"></div>
+      </div>
+      <div class="loader-text">جاري التحميل...</div>
+    </div>
+  </div>
+
+  <header class="main-header">
+    <div class="logo">
+      <div class="logo-icon">🛡</div>
+      <h1>طلبات الكشوف </h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-header">
+      <h2>📦 تقديم كشفي </h2>
+      <div class="progress-tube">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <form id="requestForm">
+      <div class="form-row">
+        <div class="form-group floating">
+          <input type="text" id="leader-name" required>
+          <label for="leader-name">اسم المسؤول</label>
+        </div>
+
+        <div class="form-group floating">
+          <input type="text" id="team-name" required>
+          <label for="team-name">اسم الفرقة</label>
+        </div>
+      </div>
+
+      <div class="form-group floating">
+        <select id="activity" required>
+          <option value=""></option>
+          <option value="خارجي">خارجي</option>
+          <option value="داخلي">داخلي</option>
+        </select>
+        <label for="activity">نوع العملية</label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group floating">
+          <input type="text" id="requested-item" required>
+          <label for="requested-item">العنصر المطلوب</label>
+        </div>
+
+        <div class="form-group floating">
+          <input type="number" id="requested-quantity" required>
+          <label for="requested-quantity">العدد المطلوب</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group floating">
+          <input type="date" id="delivery-date" required>
+          <label for="delivery-date">تاريخ التوريد</label>
+        </div>
+
+        <div class="form-group floating">
+          <input type="date" id="receiving-date" required>
+          <label for="receiving-date">تاريخ الاستلام</label>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <span>إرسال الطلب</span>
+      </button>
+    </form>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZgXLUfHvq4X0WVYUlZXp42famzpj1WEc",
+      authDomain: "george-a14fb.firebaseapp.com",
+      databaseURL: "https://george-a14fb-default-rtdb.firebaseio.com",
+      projectId: "george-a14fb",
+      storageBucket: "george-a14fb.firebasestorage.app",
+      messagingSenderId: "119902454244",
+      appId: "1:119902454244:web:581c2c6d845e331c2007f1"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database().ref("materialRequests");
+
+    window.onload = function() {
+      setTimeout(() => {
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('loader').remove(), 500);
+      }, 2000);
+    };
+
+    // تحديث أنبوب التقدم
+    function updateProgress() {
+      const fields = ['leader-name', 'team-name', 'activity', 
+        'requested-item', 'requested-quantity', 'delivery-date', 'receiving-date'];
+      
+      const filledCount = fields.filter(id => 
+        document.getElementById(id).value.trim() !== '').length;
+      
+      document.querySelector('.progress-fill').style.width = 
+        `${(filledCount / fields.length) * 100}%`;
+    }
+
+    document.querySelectorAll('input, select').forEach(element => {
+      element.addEventListener('input', updateProgress);
+      element.addEventListener('change', updateProgress);
+    });
+
+    document.getElementById('requestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.querySelector('.submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'جاري الإرسال...';
+
+      const formData = {
+        leaderName: document.getElementById('leader-name').value.trim(),
+        teamName: document.getElementById('team-name').value.trim(),
+        activity: document.getElementById('activity').value,
+        requestedItem: document.getElementById('requested-item').value.trim(),
+        requestedQuantity: document.getElementById('requested-quantity').value.trim(),
+        deliveryDate: document.getElementById('delivery-date').value,
+        receivingDate: document.getElementById('receiving-date').value
+      };
+    
+      try {
+        // إرسال البيانات إلى Firebase
+        await database.push(formData);
+        
+        // تغيير لون الزر وإظهار تأكيد
+        submitBtn.style.background = 'linear-gradient(135deg, #3B185F, #2A0944)';
+        submitBtn.querySelector('span').textContent = '✓ تم الإرسال';
+        
+        // إرسال رسالة واتساب
+        const message = `طلب جديد 📦
+    
+    اسم المسؤول: ${formData.leaderName}
+    الفرقة: ${formData.teamName}
+    نوع العملية: ${formData.activity}
+    العنصر المطلوب: ${formData.requestedItem}
+    العدد المطلوب: ${formData.requestedQuantity}
+    تاريخ التوريد: ${formData.deliveryDate}
+    تاريخ الاستلام: ${formData.receivingDate}`;
+    
+        const numbers = ['201280440587'];
+        numbers.forEach(num => {
+          window.open(`https://wa.me/${num}?text=${encodeURIComponent(message)}`, '_blank');
+        });
+    
+        // إعادة تعيين النموذج بعد 2 ثانية
+        setTimeout(() => {
+          document.getElementById('requestForm').reset();
+          submitBtn.style.background = 'linear-gradient(135deg, var(--accent-color), var(--secondary-color))';
+          submitBtn.querySelector('span').textContent = 'إرسال الطلب';
+          submitBtn.disabled = false;
+          submitBtn.querySelector('.btn-loader').style.display = 'none';
+        }, 2000);
+    
+      } catch (error) {
+        console.error('Error:', error);
+        submitBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+        submitBtn.querySelector('span').textContent = '❌ خطأ في الإرسال';
+        setTimeout(() => {
+          submitBtn.style.background = 'linear-gradient(135deg, var(--accent-color), var(--secondary-color))';
+          submitBtn.querySelector('span').textContent = 'إرسال الطلب';
+          submitBtn.disabled = false;
+          submitBtn.querySelector('.btn-loader').style.display = 'none';
+        }, 2000);
+      }
+    });
+    
+    // نظام الحماية لمنع الفحص
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.onkeydown = (e) => {
+      if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+      }
+    };
+</script>
+</body>
+</html>
+
+    
