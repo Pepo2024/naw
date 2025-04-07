@@ -273,7 +273,7 @@
   const database = firebase.database();
   const messaging = firebase.messaging();
 
-  // تسجيل Service Worker
+  // تسجيل Service Worker للإشعارات
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
       .then(registration => {
@@ -288,7 +288,7 @@
   let attemptCount = 0;
   const BAN_DURATION = 60000;
 
-  // طلب إذن الإشعارات
+  // طلب إذن الإشعارات والحصول على FCM Token
   function requestNotificationPermission() {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
@@ -296,8 +296,6 @@
       }
     });
   }
-
-  // الحصول على FCM Token
   function getFCMToken() {
     messaging.getToken({ vapidKey: 'BIr0VwRaBu2y2TPbs89jWg-DVpdW5czP_wWWnPucEb8Xs9MBW6Jjk9IhXEXCdhYE3zBIMCc0yLAokodRcjVCxCI' })
       .then(currentToken => {
@@ -307,8 +305,7 @@
       })
       .catch(err => console.log('خطأ في الحصول على التوكن:', err));
   }
-
-  // عرض الإشعارات
+  // عرض إشعار على الشاشة
   function showNotification(title, body) {
     if (Notification.permission === "granted") {
       new Notification(title, { 
@@ -318,8 +315,6 @@
       });
     }
   }
-
-  // الاستماع للرسائل الواردة
   messaging.onMessage(payload => {
     showNotification(payload.notification.title, payload.notification.body);
   });
@@ -330,14 +325,12 @@
       orderCountSpan.textContent = snapshot.numChildren();
     });
   }
-
-  // عرض الرسائل (للأخطاء أو النجاح)
+  // عرض رسالة (خطأ أو نجاح)
   function showMessage(message, type) {
     errorMessage.textContent = message;
     errorMessage.className = "alert show " + type;
     setTimeout(() => errorMessage.classList.remove("show"), 3000);
   }
-
   // التحقق من حالة الحظر بعد محاولات خاطئة
   function checkBanStatus() {
     let bannedUntil = localStorage.getItem("bannedUntil");
@@ -352,7 +345,6 @@
       }, bannedUntil - Date.now());
     }
   }
-
   // التعامل مع زر الدخول
   loginButton.addEventListener('click', function() {
     const password = document.getElementById('password').value.trim();
@@ -378,7 +370,6 @@
       }
     }
   });
-
   // تبديل إظهار/إخفاء كلمة المرور
   function togglePasswordVisibility() {
     const passwordInput = document.getElementById('password');
@@ -386,8 +377,7 @@
     passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
     toggleIcon.classList.toggle('fa-eye-slash');
   }
-
-  // تحميل الطلبات وعرضها في القسم المخصص "orders"
+  // تحميل الطلبات من Firebase وعرضها داخل العنصر "orders"
   function loadOrders() {
     const ordersDiv = document.getElementById('orders');
     database.ref("orders").on("value", snapshot => {
@@ -446,7 +436,6 @@
       updateOrderCount();
     });
   }
-
   // تبديل عرض تفاصيل الطلب
   function toggleDetails(element) {
     const details = element.nextElementSibling;
@@ -454,8 +443,7 @@
     details.classList.toggle('open');
     arrowIcon.style.transform = details.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
   }
-
-  // حذف طلب محدد
+  // حذف طلب من قاعدة البيانات
   function deleteOrder(orderKey) {
     if (confirm('هل أنت متأكد من رغبتك في حذف هذا الطلب؟')) {
       const deleteSound = document.getElementById('delete-sound');
@@ -465,20 +453,15 @@
         .catch(() => showMessage('حدث خطأ أثناء الحذف', 'error'));
     }
   }
-
   checkBanStatus();
   updateOrderCount();
 </script>
 
 <!-- نظام الحماية لمنع الفحص -->
 <script>
-  // تعطيل النقر بزر الماوس الأيمن
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-  });
-  // تعطيل اختصارات لوحة المفاتيح المستخدمة لفتح أدوات المطور
+  document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   document.onkeydown = function(e) {
-    if (e.keyCode === 123 || 
+    if (e.keyCode === 123 ||
        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
        (e.ctrlKey && e.keyCode === 85)) {
       e.preventDefault();
