@@ -15,14 +15,12 @@
       --text-color: #FEC260;
       --background-gradient: linear-gradient(135deg, #2A0944, #3B185F, #A12568);
     }
-    
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: 'Cairo', sans-serif;
     }
-    
     body {
       background: var(--background-gradient);
       color: #fff;
@@ -30,7 +28,6 @@
       position: relative;
       overflow-x: hidden;
     }
-    
     /* قسم النجوم في الخلفية */
     .stars {
       position: absolute;
@@ -62,7 +59,6 @@
       0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
-    
     #loader {
       position: fixed;
       top: 0;
@@ -76,18 +72,15 @@
       z-index: 1000;
       transition: opacity 0.5s ease;
     }
-    
     .loader-container {
       text-align: center;
     }
-    
     .loader {
       width: 80px;
       height: 80px;
       position: relative;
       margin: 0 auto;
     }
-    
     .loader-spinner {
       width: 100%;
       height: 100%;
@@ -97,7 +90,6 @@
       animation: spin 1.5s linear infinite;
       position: relative;
     }
-    
     .loader-spinner::after {
       content: '';
       position: absolute;
@@ -110,12 +102,10 @@
       border-radius: 50%;
       animation: spin 2s linear infinite;
     }
-    
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    
     .loader-text {
       margin-top: 20px;
       font-size: 1.2rem;
@@ -123,12 +113,10 @@
       letter-spacing: 2px;
       animation: textPulse 1.5s ease-in-out infinite;
     }
-    
     @keyframes textPulse {
       0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
-    
     .main-header {
       padding: 60px;
       position: fixed;
@@ -140,12 +128,10 @@
       box-shadow: 0 0 20px rgba(110, 24, 136, 0.834);
       z-index: 100;
     }
-    
     .main-header:hover {
       box-shadow: 0 0 20px rgb(160, 176, 228);
       transition: box-shadow 0.3s ease-in-out;
     }
-    
     .logo {
       position: absolute;
       top: 10px;
@@ -155,7 +141,6 @@
       gap: 15px;
       animation: slideIn 1s ease-out;
     }
-    
     .logo img {
       width: 100px;
       height: 100px;
@@ -163,18 +148,15 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
       border: 2px solid rgba(255, 255, 255, 0.6);
     }
-    
     .logo h1 {
       font-size: 1.5rem;
       color: var(--text-color);
     }
-    
     .logo span {
       font-size: 0.9rem;
       color: #fff;
       opacity: 0.8;
     }
-    
     .container {
       width: 90%;
       max-width: 800px;
@@ -188,25 +170,21 @@
       opacity: 0;
       animation: containerEntry 1s ease forwards;
     }
-    
     @keyframes containerEntry {
       to {
         transform: translateY(0);
         opacity: 1;
       }
     }
-    
     .form-header {
       text-align: center;
       margin-bottom: 40px;
     }
-    
     .form-header h2 {
       font-size: 2rem;
       margin-bottom: 15px;
       color: var(--text-color);
     }
-    
     .progress-tube {
       width: 90%;
       height: 12px;
@@ -216,7 +194,6 @@
       overflow: hidden;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
-    
     .progress-fill {
       height: 100%;
       width: 0%;
@@ -225,7 +202,6 @@
       transition: width 0.5s ease-in-out;
       position: relative;
     }
-    
     .progress-fill::after {
       content: '';
       position: absolute;
@@ -236,25 +212,21 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
       animation: tubeGlow 2s infinite;
     }
-    
     @keyframes tubeGlow {
       0% { opacity: 0.5; }
       50% { opacity: 1; }
       100% { opacity: 0.5; }
     }
-    
     .form-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 25px;
       margin-bottom: 25px;
     }
-    
     .form-group {
       position: relative;
       margin-bottom: 25px;
     }
-    
     .form-group.floating label {
       position: absolute;
       right: 15px;
@@ -264,7 +236,6 @@
       pointer-events: none;
       transition: 0.3s ease;
     }
-    
     .form-group.floating input,
     .form-group.floating select,
     .form-group.floating input[type="time"] {
@@ -277,7 +248,6 @@
       font-size: 16px;
       transition: 0.3s ease;
     }
-    
     .form-group.floating input:focus,
     .form-group.floating select:focus,
     .form-group.floating input:valid,
@@ -285,7 +255,6 @@
       border-color: var(--accent-color);
       background: rgba(161, 37, 104, 0.1);
     }
-    
     .form-group.floating input:focus ~ label,
     .form-group.floating select:focus ~ label,
     .form-group.floating input:valid ~ label,
@@ -294,7 +263,6 @@
       font-size: 0.9em;
       color: var(--text-color);
     }
-    
     .input-border {
       position: absolute;
       bottom: 0;
@@ -304,7 +272,6 @@
       background: var(--accent-color);
       transition: 0.3s ease;
     }
-    
     /* ترتيب مربعات الاختيار في صفين بعمودين */
     .checkbox-group {
       display: grid;
@@ -325,7 +292,6 @@
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
     }
-    
     .submit-btn {
       position: relative;
       width: 100%;
@@ -340,12 +306,10 @@
       transition: 0.3s ease;
       margin-top: 20px;
     }
-    
     .submit-btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 25px rgba(161, 37, 104, 0.4);
     }
-    
     .notification {
       position: fixed;
       top: 20px;
@@ -358,20 +322,16 @@
       z-index: 1100;
       font-weight: bold;
     }
-    
     .notification.success {
       background: #2ecc71;
     }
-    
     .notification.error {
       background: #e74c3c;
     }
-    
     @keyframes slideIn {
       from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
       to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
-    
     @keyframes shake {
       0% { transform: translateX(-50%) rotate(0deg); }
       25% { transform: translateX(-50%) rotate(5deg); }
@@ -425,6 +385,17 @@
           <input type="text" id="leader-name" required>
           <label for="leader-name">اسم القائد</label>
         </div>
+      </div>
+
+      <!-- حقل رقم الهاتف تحت اسم القائد -->
+      <div class="form-row">
+        <div class="form-group floating">
+          <input type="tel" id="phone-number" required>
+          <label for="phone-number">رقم الهاتف</label>
+        </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group floating">
           <input type="text" id="team-name" required>
           <label for="team-name">اسم الفرقة</label>
@@ -449,7 +420,7 @@
         </div>
         <div class="checkbox-item">
           <input type="checkbox" id="checkbox2">
-          <label for="checkbox2">سيزل</label>
+          <label for="checkbox2">سيلز</label>
           <input type="number" id="number2" value="1" min="1">
         </div>
         <div class="checkbox-item">
@@ -464,10 +435,10 @@
         </div>
       </div>
 
-      <!-- حقل إضافي "شيء اخر (بالعدد)" -->
+      <!-- حقل "شيء اخر (بالعدد)" أصبح اختياريًا -->
       <div class="form-row">
         <div class="form-group floating">
-          <input type="text" id="extra-info" required>
+          <input type="text" id="extra-info"  >
           <label for="extra-info">شيء اخر. (بالعدد)</label>
         </div>
       </div>
@@ -582,19 +553,20 @@
 
       const formData = {
         leaderName: document.getElementById('leader-name').value.trim(),
+        phoneNumber: document.getElementById('phone-number').value.trim(),
         teamName: document.getElementById('team-name').value.trim(),
         activity: document.getElementById('activity').value,
         requestedItem: document.getElementById('requested-item') ? document.getElementById('requested-item').value.trim() : "",
-        extraInfo: document.getElementById('extra-info').value.trim(),
+        extraInfo: document.getElementById('extra-info').value.trim(), // هذا الحقل أصبح اختيارياً
         deliveryDate: document.getElementById('delivery-date').value,
         receivingDate: document.getElementById('receiving-date').value,
         deliveryTime: document.getElementById('delivery-time').value,
         options: {
-           شوم : {
+          "شوم": {
             selected: document.getElementById('checkbox1').checked,
             quantity: document.getElementById('number1').value.trim()
           },
-          سيلز : {
+          "سيلز": {
             selected: document.getElementById('checkbox2').checked,
             quantity: document.getElementById('number2').value.trim()
           },
