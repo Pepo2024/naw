@@ -29,7 +29,6 @@
       grid-template-columns: 250px 1fr;
       min-height: 100vh;
     }
-    /* السايدبار */
     .sidebar {
       background: var(--primary-color);
       padding: 25px;
@@ -58,10 +57,9 @@
       align-items: center;
       gap: 10px;
     }
-    .nav-item:hover {
+    .nav-item.active {
       background: var(--accent-color);
     }
-    /* المحتوى الرئيسي */
     .main-content {
       padding: 30px;
       background: #f5f6fa;
@@ -79,10 +77,6 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
       transition: 0.3s;
     }
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    }
     .stat-header {
       display: flex;
       align-items: center;
@@ -94,13 +88,11 @@
       color: var(--primary-color);
       font-weight: 700;
     }
-    /* جدول البيانات */
     .data-table {
       background: #fff;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      margin-top: 20px;
     }
     table {
       width: 100%;
@@ -123,6 +115,7 @@
       border-radius: 20px;
       font-size: 0.9em;
       cursor: pointer;
+      transition: 0.3s;
     }
     .pending {
       background: #ffeaa7;
@@ -131,6 +124,21 @@
     .completed {
       background: #55efc4;
       color: #00b894;
+    }
+    .action-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .complete-btn {
+      background: #00b894;
+      color: white;
+    }
+    .details-btn {
+      background: var(--accent-color);
+      color: white;
     }
   </style>
 </head>
@@ -143,20 +151,18 @@
         <h2 style="color: #fff; margin-top: 15px;">لوحة التحكم</h2>
       </div>
       <div class="nav-menu">
-        <div class="nav-item" id="nav-main">
-          <span>🏠</span> الرئيسية
-        </div>
-        <div class="nav-item" id="nav-all">
+        <div class="nav-item active" onclick="filterRequests('all')">
           <span>📋</span> جميع الطلبات
         </div>
-        <div class="nav-item">
-          <span>📊</span> الإحصائيات
+        <div class="nav-item" onclick="filterRequests('pending')">
+          <span>⏳</span> قيد المعالجة
         </div>
-        <div class="nav-item">
-          <span>⚙️</span> الإعدادات
+        <div class="nav-item" onclick="filterRequests('completed')">
+          <span>✅</span> مكتملة
         </div>
       </div>
     </div>
+
     <!-- المحتوى الرئيسي -->
     <div class="main-content">
       <div class="stats-container">
@@ -182,27 +188,32 @@
           <div class="stat-value" id="pendingRequests">0</div>
         </div>
       </div>
-      <!-- جدول البيانات -->
-      <div class="data-table" id="dataTable">
+
+      <div class="data-table">
         <table>
           <thead>
             <tr>
               <th>اسم القائد</th>
-              <th>رقم الهاتف</th>
-              <th>الفرقة</th>
+              <th>رقم التليفون</th>
+              <th>اسم الفرقة</th>
+              <th>النشاط</th>
               <th>المواد المطلوبة</th>
+              <th>شئ آخر</th>
               <th>تاريخ التسليم</th>
-              <th>وقت التسليم</th>
+              <th>تاريخ التسلم</th>
+              <th>الوقت</th>
               <th>الحالة</th>
+              <th>الإجراءات</th>
             </tr>
           </thead>
           <tbody id="requestsTable">
-            <!-- البيانات ستضاف هنا عبر الجافاسكريبت -->
+            <!-- سيتم إضافة البيانات هنا عبر الجافاسكريبت -->
           </tbody>
         </table>
       </div>
     </div>
   </div>
+
   <script>
     // تكوين Firebase
     const firebaseConfig = {
@@ -214,98 +225,124 @@
       messagingSenderId: "119902454244",
       appId: "1:119902454244:web:581c2c6d845e331c2007f1"
     };
-    
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref("materialRequests");
-    
-    // دالة جلب وعرض البيانات
+    const database = firebase.database().ref("materialRequests");
+
+    let allRequests = [];
+    let currentFilter = 'all';
+
+    // دالة لتصفية الطلبات بحسب الحالة (all, pending, completed)
+    function filterRequests(type) {
+      currentFilter = type;
+      // إزالة التفعيل من كل عناصر القائمة
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      // تفعيل العنصر المناسب
+      if(type === 'all') {
+        document.querySelector('.nav-menu .nav-item:nth-child(1)').classList.add('active');
+      } else if(type === 'pending') {
+        document.querySelector('.nav-menu .nav-item:nth-child(2)').classList.add('active');
+      } else if(type === 'completed') {
+        document.querySelector('.nav-menu .nav-item:nth-child(3)').classList.add('active');
+      }
+      renderTable();
+    }
+
+    // دالة لتحديث حالة الطلب في قاعدة البيانات
+    function updateStatus(requestId, status) {
+      database.child(requestId).update({ status: status })
+        .then(() => console.log('تم تحديث الحالة'))
+        .catch(error => console.error('خطأ في تحديث الحالة:', error));
+    }
+
+    // دالة عرض الجدول بناءً على البيانات المفلترة
+    function renderTable() {
+      const tbody = document.getElementById('requestsTable');
+      tbody.innerHTML = '';
+      
+      const filteredData = allRequests.filter(request => {
+        if (currentFilter === 'pending') return request.status === 'pending';
+        if (currentFilter === 'completed') return request.status === 'completed';
+        return true;
+      });
+
+      filteredData.forEach((request, index) => {
+        // معالجة قائمة المواد المطلوبة من الخيارات في الطلب
+        const materials = [];
+        if(request.options && request.options["شوم"] && request.options["شوم"].selected)
+          materials.push(`شوم (${request.options["شوم"].quantity})`);
+        if(request.options && request.options["سيلز"] && request.options["سيلز"].selected)
+          materials.push(`سيلز (${request.options["سيلز"].quantity})`);
+        if(request.options && request.options.option3 && request.options.option3.selected)
+          materials.push(`خيمة هايك (${request.options.option3.quantity})`);
+        if(request.options && request.options.option4 && request.options.option4.selected)
+          materials.push(`خيمة قماش (${request.options.option4.quantity})`);
+        
+        // يُفترض أن حقل extraInfo يمثل "شئ آخر"
+        const extra = request.extraInfo ? request.extraInfo : '';
+        
+        // إنشاء صف جديد للطلب مع جميع الحقول المطلوبة
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${request.leaderName || ''}</td>
+          <td>${request.phoneNumber || ''}</td>
+          <td>${request.teamName || ''}</td>
+          <td>${request.activity || ''}</td>
+          <td>${materials.join('<br>')}</td>
+          <td>${extra}</td>
+          <td>${request.deliveryDate || ''}</td>
+          <td>${request.receivingDate || ''}</td>
+          <td>${request.deliveryTime || ''}</td>
+          <td>
+            <span class="status-badge ${request.status === 'pending' ? 'pending' : 'completed'}">
+              ${request.status === 'pending' ? 'قيد المعالجة' : 'مكتمل'}
+            </span>
+          </td>
+          <td>
+            ${
+              request.status === 'pending' ? 
+              `<button class="action-btn complete-btn" onclick="updateStatus('${request.id}', 'completed')">تم التسليم</button>` : 
+              `<button class="action-btn details-btn" onclick="alert('تفاصيل الطلب:\\nاسم القائد: ${request.leaderName}\\nرقم التليفون: ${request.phoneNumber}\\nاسم الفرقة: ${request.teamName}\\nالنشاط: ${request.activity}\\nالمواد: ${materials.join(', ')}\\nشئ آخر: ${extra}\\nتاريخ التسليم: ${request.deliveryDate}\\nتاريخ التسلم: ${request.receivingDate}\\nالوقت: ${request.deliveryTime}')">تفاصيل</button>`
+            }
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // دالة جلب البيانات من Firebase
     function fetchData() {
-      dbRef.on('value', (snapshot) => {
+      database.on('value', (snapshot) => {
+        allRequests = [];
         const data = snapshot.val();
-        const tbody = document.getElementById('requestsTable');
-        tbody.innerHTML = '';
         
         let total = 0;
         let todayCount = 0;
-        
+        let pendingCount = 0;
+
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
             total++;
             const request = data[key];
-            const row = document.createElement('tr');
+            request.id = key;
+            if (!request.status) request.status = 'pending';
+            if (request.status === 'pending') pendingCount++;
             
-            // حساب طلبات اليوم
+            // حساب طلبات اليوم باستخدام تاريخ التسليم
             const today = new Date().toISOString().split('T')[0];
             if (request.deliveryDate === today) todayCount++;
             
-            // معالجة المواد المطلوبة
-            const materials = [];
-            if (request.options["شوم"] && request.options["شوم"].selected)
-              materials.push(`شوم (${request.options["شوم"].quantity})`);
-            if (request.options["سيلز"] && request.options["سيلز"].selected)
-              materials.push(`سيلز (${request.options["سيلز"].quantity})`);
-            if (request.options.option3 && request.options.option3.selected)
-              materials.push(`خيمة هايك (${request.options.option3.quantity})`);
-            if (request.options.option4 && request.options.option4.selected)
-              materials.push(`خيمة قماش (${request.options.option4.quantity})`);
-            if (request.extraInfo) materials.push(request.extraInfo);
-            
-            row.innerHTML = `
-              <td>${request.leaderName}</td>
-              <td>${request.phoneNumber}</td>
-              <td>${request.teamName}</td>
-              <td>${materials.join('، ')}</td>
-              <td>${request.deliveryDate}</td>
-              <td>${request.deliveryTime}</td>
-              <td><span class="status-badge pending" data-key="${key}">قيد المعالجة</span></td>
-            `;
-            tbody.appendChild(row);
+            allRequests.push(request);
           }
         }
-        
+
         document.getElementById('totalRequests').textContent = total;
         document.getElementById('todayRequests').textContent = todayCount;
-        document.getElementById('pendingRequests').textContent = total;
-        addDeleteEvent(); // إضافة حدث النقر بعد عرض الصفوف
+        document.getElementById('pendingRequests').textContent = pendingCount;
+        
+        renderTable();
       });
     }
-    
-    // دالة لإضافة مستمع النقر على شارة "قيد المعالجة" لحذف الطلب
-    function addDeleteEvent() {
-      const pendingBadges = document.querySelectorAll('.status-badge.pending');
-      pendingBadges.forEach(badge => {
-        badge.addEventListener('click', (e) => {
-          const key = e.target.getAttribute('data-key');
-          if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-            firebase.database().ref("materialRequests/" + key).remove()
-              .then(() => {
-                e.target.closest('tr').remove();
-              })
-              .catch((error) => {
-                console.error("خطأ في حذف الطلب:", error);
-              });
-          }
-        });
-      });
-    }
-    
-    // تبديل ظهور الجدول عند النقر على "جميع الطلبات"
-    document.getElementById('nav-all').addEventListener('click', () => {
-      const dataTable = document.getElementById('dataTable');
-      // إذا كان الجدول ظاهر، نقوم بإخفائه والعكس صحيح
-      if (dataTable.style.display === 'none') {
-        dataTable.style.display = 'block';
-      } else {
-        dataTable.style.display = 'none';
-      }
-    });
-    
-    // النقر على الرئيسية يعرض الجدول دائماً
-    document.getElementById('nav-main').addEventListener('click', () => {
-      document.getElementById('dataTable').style.display = 'block';
-    });
-    
-    // تشغيل دالة جلب البيانات عند تحميل الصفحة
+
     window.onload = fetchData;
   </script>
 </body>
