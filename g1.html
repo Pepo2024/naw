@@ -33,7 +33,6 @@
       min-height: 100vh;
     }
 
-    /* السايدبار */
     .sidebar {
       background: var(--primary-color);
       padding: 25px;
@@ -67,11 +66,10 @@
       gap: 10px;
     }
 
-    .nav-item:hover {
+    .nav-item.active {
       background: var(--accent-color);
     }
 
-    /* المحتوى الرئيسي */
     .main-content {
       padding: 30px;
       background: #f5f6fa;
@@ -92,11 +90,6 @@
       transition: 0.3s;
     }
 
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    }
-
     .stat-header {
       display: flex;
       align-items: center;
@@ -110,7 +103,6 @@
       font-weight: 700;
     }
 
-    /* جدول البيانات */
     .data-table {
       background: #fff;
       border-radius: 12px;
@@ -142,6 +134,8 @@
       padding: 5px 12px;
       border-radius: 20px;
       font-size: 0.9em;
+      cursor: pointer;
+      transition: 0.3s;
     }
 
     .pending {
@@ -153,11 +147,49 @@
       background: #55efc4;
       color: #00b894;
     }
+
+    .action-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .complete-btn {
+      background: #00b894;
+      color: white;
+    }
+
+    .details-btn {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .request-details {
+      display: none;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .request-details.active {
+      display: block;
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
   <div class="admin-container">
-    <!-- السايدبار -->
     <div class="sidebar">
       <div class="logo-section">
         <img src="p1.jpg" alt="الشعار">
@@ -165,22 +197,18 @@
       </div>
 
       <div class="nav-menu">
-        <div class="nav-item">
-          <span>🏠</span> الرئيسية
-        </div>
-        <div class="nav-item">
+        <div class="nav-item active" onclick="filterRequests('all')">
           <span>📋</span> جميع الطلبات
         </div>
-        <div class="nav-item">
-          <span>📊</span> الإحصائيات
+        <div class="nav-item" onclick="filterRequests('pending')">
+          <span>⏳</span> قيد المعالجة
         </div>
-        <div class="nav-item">
-          <span>⚙️</span> الإعدادات
+        <div class="nav-item" onclick="filterRequests('completed')">
+          <span>✅</span> مكتملة
         </div>
       </div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <div class="main-content">
       <div class="stats-container">
         <div class="stat-card">
@@ -208,17 +236,16 @@
         </div>
       </div>
 
-      <!-- جدول البيانات -->
       <div class="data-table">
         <table>
           <thead>
             <tr>
               <th>اسم القائد</th>
-              <th>رقم الهاتف</th>
               <th>الفرقة</th>
-              <th>المواد المطلوبة</th>
-              <th>تاريخ التسليم</th>
+              <th>المواد</th>
+              <th>تواريخ</th>
               <th>الحالة</th>
+              <th>الإجراءات</th>
             </tr>
           </thead>
           <tbody id="requestsTable">
@@ -230,7 +257,6 @@
   </div>
 
   <script>
-    // تكوين Firebase (نفس التكوين السابق)
     const firebaseConfig = {
       apiKey: "AIzaSyCZgXLUfHvq4X0WVYUlZXp42famzpj1WEc",
       authDomain: "george-a14fb.firebaseapp.com",
@@ -240,58 +266,120 @@
       messagingSenderId: "119902454244",
       appId: "1:119902454244:web:581c2c6d845e331c2007f1"
     };
-    
+
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database().ref("materialRequests");
 
-    // جلب البيانات وعرضها
+    let allRequests = [];
+    let currentFilter = 'all';
+
+    function filterRequests(type) {
+      currentFilter = type;
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`.nav-item:nth-child(${type === 'all' ? 1 : type === 'pending' ? 2 : 3})`).classList.add('active');
+      renderTable();
+    }
+
+    function updateStatus(requestId, status) {
+      database.child(requestId).update({ status: status })
+        .then(() => console.log('Status updated'))
+        .catch(error => console.error('Error updating status:', error));
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('requestsTable');
+      tbody.innerHTML = '';
+      
+      const filteredData = allRequests.filter(request => {
+        if (currentFilter === 'pending') return request.status === 'pending';
+        if (currentFilter === 'completed') return request.status === 'completed';
+        return true;
+      });
+
+      filteredData.forEach((request, index) => {
+        const materials = [];
+        if (request.options["شوم"].selected) materials.push(`شوم (${request.options["شوم"].quantity})`);
+        if (request.options["سيلز"].selected) materials.push(`سيلز (${request.options["سيلز"].quantity})`);
+        if (request.options.option3.selected) materials.push(`خيمة هايك (${request.options.option3.quantity})`);
+        if (request.options.option4.selected) materials.push(`خيمة قماش (${request.options.option4.quantity})`);
+        if (request.extraInfo) materials.push(request.extraInfo);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${request.leaderName}</td>
+          <td>${request.teamName}</td>
+          <td>${materials.join('<br>')}</td>
+          <td>
+            <div>التسليم: ${request.deliveryDate}</div>
+            <div>التسلم: ${request.receivingDate}</div>
+          </td>
+          <td>
+            <span class="status-badge ${request.status === 'pending' ? 'pending' : 'completed'}">
+              ${request.status === 'pending' ? 'قيد المعالجة' : 'مكتمل'}
+            </span>
+          </td>
+          <td>
+            ${request.status === 'pending' ? 
+              `<button class="action-btn complete-btn" onclick="updateStatus('${request.id}', 'completed')">تم التسليم</button>` : 
+              `<button class="action-btn details-btn" onclick="showDetails(${index})">تفاصيل</button>`}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function showDetails(index) {
+      const request = allRequests[index];
+      const detailHtml = `
+        <div class="detail-item">
+          <span>اسم القائد:</span>
+          <span>${request.leaderName}</span>
+        </div>
+        <div class="detail-item">
+          <span>رقم الهاتف:</span>
+          <span>${request.phoneNumber}</span>
+        </div>
+        <div class="detail-item">
+          <span>وقت التسليم:</span>
+          <span>${request.deliveryTime}</span>
+        </div>
+      `;
+      // يمكن إضافة المزيد من التفاصيل حسب الحاجة
+    }
+
     function fetchData() {
       database.on('value', (snapshot) => {
+        allRequests = [];
         const data = snapshot.val();
-        const tbody = document.getElementById('requestsTable');
-        tbody.innerHTML = '';
         
         let total = 0;
         let todayCount = 0;
-        
+        let pendingCount = 0;
+
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
             total++;
             const request = data[key];
-            const row = document.createElement('tr');
+            request.id = key;
             
-            // حساب طلبات اليوم
+            if (!request.status) request.status = 'pending';
+            if (request.status === 'pending') pendingCount++;
+            
             const today = new Date().toISOString().split('T')[0];
             if (request.deliveryDate === today) todayCount++;
             
-            // معالجة المواد المطلوبة
-            const materials = [];
-            if (request.options["شوم"].selected) materials.push(`شوم (${request.options["شوم"].quantity})`);
-            if (request.options["سيلز"].selected) materials.push(`سيلز (${request.options["سيلز"].quantity})`);
-            if (request.options.option3.selected) materials.push(`خيمة هايك (${request.options.option3.quantity})`);
-            if (request.options.option4.selected) materials.push(`خيمة قماش (${request.options.option4.quantity})`);
-            if (request.extraInfo) materials.push(request.extraInfo);
-            
-            row.innerHTML = `
-              <td>${request.leaderName}</td>
-              <td>${request.phoneNumber}</td>
-              <td>${request.teamName}</td>
-              <td>${materials.join('، ')}</td>
-              <td>${request.deliveryDate} - ${request.deliveryTime}</td>
-              <td><span class="status-badge pending">قيد المعالجة</span></td>
-            `;
-            
-            tbody.appendChild(row);
+            allRequests.push(request);
           }
         }
-        
+
         document.getElementById('totalRequests').textContent = total;
         document.getElementById('todayRequests').textContent = todayCount;
-        document.getElementById('pendingRequests').textContent = total;
+        document.getElementById('pendingRequests').textContent = pendingCount;
+        
+        renderTable();
       });
     }
 
-    // تشغيل عند تحميل الصفحة
     window.onload = fetchData;
   </script>
 </body>
