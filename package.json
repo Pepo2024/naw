@@ -1,0 +1,24 @@
+{
+  "name": "electronic-book-generator",
+  "version": "1.0.0",
+  "description": "مولد الكتب الإلكترونية التفاعلية",
+  "main": "create-sites.js",
+  "scripts": {
+    "create-sites": "node create-sites.js",
+    "start": "node create-sites.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "book",
+    "electronic",
+    "interactive",
+    "arabic",
+    "website"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": ">=12.0.0"
+  }
+} 
