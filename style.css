@@ -886,4 +886,13 @@ body {
     padding: 12px 4px;
     gap: 8px;
   }
+}
+
+.motto-margin-top {
+  margin-top: 18px;
+}
+@media (max-width: 480px) {
+  .motto-margin-top {
+    margin-top: 10px;
+  }
 } 
